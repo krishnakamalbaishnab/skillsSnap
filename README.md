@@ -141,7 +141,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Your Name**
 - GitHub: [@krishnakamalbaishnab](https://github.com/krishnakamalbaishnab)
-- LinkedIn: [Your LinkedIn](https://linkedin.com/in/krishnakamalbaishnab)
+- LinkedIn: [@krishnakamalbaishnab](https://linkedin.com/in/krishnakamalbaishnab)
 
 ---
 
