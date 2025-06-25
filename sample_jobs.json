@@ -1,0 +1,22 @@
+[
+  {
+    "title": "Software Engineer",
+    "description": "We are looking for a skilled Software Engineer with experience in Python, JavaScript, React, Node.js, SQL databases, Git version control, and RESTful APIs. The ideal candidate should have knowledge of software development lifecycle, testing frameworks, cloud platforms like AWS or Azure, and experience with agile methodologies. Strong problem-solving skills and ability to work in a team environment are essential."
+  },
+  {
+    "title": "Data Scientist",
+    "description": "Seeking a Data Scientist with expertise in Python, R, machine learning, statistical analysis, pandas, NumPy, scikit-learn, TensorFlow, PyTorch, SQL, data visualization tools like Tableau or Power BI, and experience with big data technologies like Spark or Hadoop. The candidate should have strong analytical skills, experience with A/B testing, and knowledge of statistical modeling techniques."
+  },
+  {
+    "title": "Frontend Developer",
+    "description": "Looking for a Frontend Developer proficient in HTML, CSS, JavaScript, React, Vue.js, Angular, responsive design, cross-browser compatibility, CSS preprocessors like Sass or Less, build tools like Webpack, version control with Git, and experience with frontend testing frameworks like Jest or Cypress. Knowledge of UI/UX principles and accessibility standards is preferred."
+  },
+  {
+    "title": "DevOps Engineer",
+    "description": "We need a DevOps Engineer with experience in Docker, Kubernetes, Jenkins, GitLab CI/CD, AWS, Azure, Google Cloud Platform, Terraform, Ansible, monitoring tools like Prometheus or Grafana, Linux administration, scripting languages like Bash or Python, and infrastructure as code. The candidate should understand containerization, microservices architecture, and security best practices."
+  },
+  {
+    "title": "Product Manager",
+    "description": "Seeking a Product Manager with skills in product strategy, market research, user experience design, data analysis, project management tools like Jira or Asana, stakeholder management, agile methodologies, A/B testing, SQL for data analysis, wireframing tools like Figma or Sketch, and experience with product analytics tools. Strong communication and leadership skills are essential for cross-functional team collaboration."
+  }
+] 
