@@ -30,7 +30,7 @@
 ### Run with Docker Compose (Recommended)
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/skillsnap.git
+git clone https://github.com/krishnakamalbaishnab/skillsnap.git
 cd skillsnap
 
 # Build and run
