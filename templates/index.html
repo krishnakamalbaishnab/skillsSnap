@@ -30,25 +30,32 @@
                         </div>
                         <p class="lead text-muted">AI-Powered Resume Analysis & Job Matching Platform</p>
                         <div class="row mt-4">
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <div class="text-center">
                                     <i class="fas fa-upload text-primary fa-2x mb-2"></i>
                                     <h6>Upload Resume</h6>
                                     <small class="text-muted">PDF text extraction</small>
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <div class="text-center">
                                     <i class="fas fa-search text-success fa-2x mb-2"></i>
                                     <h6>Find Jobs</h6>
                                     <small class="text-muted">AI recommendations</small>
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <div class="text-center">
                                     <i class="fas fa-chart-line text-warning fa-2x mb-2"></i>
                                     <h6>Skill Analysis</h6>
                                     <small class="text-muted">Gap identification</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <i class="fas fa-magic text-info fa-2x mb-2"></i>
+                                    <h6>LLM Enhanced</h6>
+                                    <small class="text-muted">Advanced AI analysis</small>
                                 </div>
                             </div>
                         </div>
@@ -56,6 +63,9 @@
 
                     <!-- Alert Container -->
                     <div id="alertContainer" class="mb-4"></div>
+
+                    <!-- LLM Status Indicator -->
+                    <div id="llmStatusIndicator" class="mb-4"></div>
 
                     <!-- Step 1: Resume Upload -->
                     <div class="feature-card">
@@ -111,9 +121,14 @@
                         </div>
 
                         <div class="text-center mb-4">
-                            <button class="btn btn-primary btn-lg" id="recommendJobsBtn" disabled>
-                                <i class="fas fa-search me-2"></i>Find Matching Jobs
-                            </button>
+                            <div class="btn-group" role="group">
+                                <button class="btn btn-primary btn-lg" id="recommendJobsBtn" disabled>
+                                    <i class="fas fa-search me-2"></i>Basic Matching
+                                </button>
+                                <button class="btn btn-info btn-lg" id="llmRecommendJobsBtn" disabled>
+                                    <i class="fas fa-magic me-2"></i>LLM Enhanced
+                                </button>
+                            </div>
                             <br><small class="text-muted mt-2">Upload a resume first to enable job recommendations</small>
                         </div>
 
@@ -147,9 +162,14 @@
                                         disabled
                                     ></textarea>
                                 </div>
-                                <button class="btn btn-primary" id="analyzeSkillsBtn" disabled>
-                                    <i class="fas fa-analytics me-2"></i>Analyze Skill Gap
-                                </button>
+                                <div class="btn-group" role="group">
+                                    <button class="btn btn-primary" id="analyzeSkillsBtn" disabled>
+                                        <i class="fas fa-analytics me-2"></i>Basic Analysis
+                                    </button>
+                                    <button class="btn btn-info" id="llmAnalyzeSkillsBtn" disabled>
+                                        <i class="fas fa-magic me-2"></i>LLM Enhanced
+                                    </button>
+                                </div>
                             </div>
                             <div class="col-lg-4">
                                 <div class="d-flex flex-column h-100 justify-content-center">
@@ -168,13 +188,36 @@
                         <div id="skillGapResults" class="mt-4"></div>
                     </div>
 
+                    <!-- Step 4: Resume Improvement (LLM Only) -->
+                    <div class="feature-card">
+                        <div class="d-flex align-items-center mb-4">
+                            <div class="feature-icon">
+                                <i class="fas fa-edit"></i>
+                            </div>
+                            <div class="ms-3">
+                                <h4 class="mb-1">Step 4: Resume Improvement Suggestions</h4>
+                                <p class="text-muted mb-0">Get AI-powered suggestions to improve your resume for specific jobs</p>
+                            </div>
+                        </div>
+
+                        <div class="text-center mb-4">
+                            <button class="btn btn-success btn-lg" id="resumeImproveBtn" disabled>
+                                <i class="fas fa-magic me-2"></i>Get Improvement Suggestions
+                            </button>
+                            <br><small class="text-muted mt-2">Upload a resume and add a job description to get personalized improvement suggestions</small>
+                        </div>
+
+                        <!-- Resume Improvement Results -->
+                        <div id="resumeImproveResults" class="mt-4"></div>
+                    </div>
+
                     <!-- API Status -->
                     <div class="text-center mt-4">
                         <small class="text-muted">
                             <i class="fas fa-server me-1"></i>
                             Backend API: <span class="text-success">Connected</span> | 
                             <i class="fas fa-code me-1"></i>
-                            Version 1.0.0
+                            Version 2.0.0 (LLM Enhanced)
                         </small>
                     </div>
 

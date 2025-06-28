@@ -126,8 +126,11 @@ async function uploadFile() {
             
             // Enable other features
             document.getElementById('recommendJobsBtn').disabled = false;
+            document.getElementById('llmRecommendJobsBtn').disabled = false;
             document.getElementById('jobDescTextarea').disabled = false;
             document.getElementById('analyzeSkillsBtn').disabled = false;
+            document.getElementById('llmAnalyzeSkillsBtn').disabled = false;
+            document.getElementById('resumeImproveBtn').disabled = false;
         } else {
             throw new Error(data.error || 'Upload failed');
         }
@@ -197,6 +200,40 @@ async function recommendJobs() {
     }
 }
 
+// LLM Job Recommendation Functions
+async function llmRecommendJobs() {
+    if (!extractedResumeText) {
+        showAlert('Please upload a resume first.', 'danger');
+        return;
+    }
+
+    showLoading('jobRecommendations');
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/llm_job_match`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                resume_text: extractedResumeText
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            displayLLMJobRecommendations(data.llm_analysis);
+            showAlert(`LLM analysis completed! Found ${data.llm_analysis.matches.length} job matches.`);
+        } else {
+            throw new Error(data.error || 'LLM recommendation failed');
+        }
+    } catch (error) {
+        hideLoading('jobRecommendations');
+        showAlert(`LLM recommendation failed: ${error.message}`, 'danger');
+    }
+}
+
 function displayJobRecommendations(recommendations) {
     const container = document.getElementById('jobRecommendations');
     
@@ -230,6 +267,74 @@ function displayJobRecommendations(recommendations) {
             </div>
         </div>
     `).join('');
+
+    container.innerHTML = html;
+}
+
+function displayLLMJobRecommendations(llmAnalysis) {
+    const container = document.getElementById('jobRecommendations');
+    
+    if (!llmAnalysis || !llmAnalysis.matches || llmAnalysis.matches.length === 0) {
+        container.innerHTML = `
+            <div class="result-card">
+                <div class="text-center py-4">
+                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                    <h5>No LLM matches found</h5>
+                    <p class="text-muted">Try uploading a different resume or check your skills.</p>
+                </div>
+            </div>
+        `;
+        return;
+    }
+
+    const html = llmAnalysis.matches.map((job, index) => `
+        <div class="result-card">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <h5 class="mb-0">
+                    <i class="fas fa-briefcase me-2 text-primary"></i>
+                    ${job.job_title}
+                </h5>
+                <span class="score-badge">${job.score}% Match</span>
+            </div>
+            
+            <div class="mb-3">
+                <h6><i class="fas fa-check-circle text-success me-2"></i>Strengths:</h6>
+                <ul class="mb-2">
+                    ${job.strengths.map(strength => `<li>${strength}</li>`).join('')}
+                </ul>
+            </div>
+            
+            ${job.concerns && job.concerns.length > 0 ? `
+            <div class="mb-3">
+                <h6><i class="fas fa-exclamation-triangle text-warning me-2"></i>Areas for Improvement:</h6>
+                <ul class="mb-2">
+                    ${job.concerns.map(concern => `<li>${concern}</li>`).join('')}
+                </ul>
+            </div>
+            ` : ''}
+            
+            <div class="mb-3">
+                <h6><i class="fas fa-lightbulb text-info me-2"></i>Why this match:</h6>
+                <ul class="mb-2">
+                    ${job.reasons.map(reason => `<li>${reason}</li>`).join('')}
+                </ul>
+            </div>
+            
+            <div class="progress mb-2">
+                <div class="progress-bar" style="width: ${job.score}%"></div>
+            </div>
+        </div>
+    `).join('');
+
+    // Add analysis summary if available
+    if (llmAnalysis.analysis_summary) {
+        html += `
+            <div class="result-card">
+                <h5><i class="fas fa-chart-line text-info me-2"></i>Overall Analysis</h5>
+                <p class="text-muted">${llmAnalysis.analysis_summary}</p>
+            </div>
+        `;
+    }
 
     container.innerHTML = html;
 }
@@ -276,6 +381,48 @@ async function analyzeSkillGap() {
     }
 }
 
+// LLM Skill Gap Analysis Functions
+async function llmAnalyzeSkillGap() {
+    const jobDescription = document.getElementById('jobDescTextarea').value.trim();
+    
+    if (!extractedResumeText) {
+        showAlert('Please upload a resume first.', 'danger');
+        return;
+    }
+
+    if (!jobDescription) {
+        showAlert('Please enter a job description.', 'danger');
+        return;
+    }
+
+    showLoading('skillGapResults');
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/llm_skill_gap`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                resume_text: extractedResumeText,
+                job_description: jobDescription
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            displayLLMSkillGapResults(data.llm_analysis);
+            showAlert('LLM skill gap analysis completed!');
+        } else {
+            throw new Error(data.error || 'LLM analysis failed');
+        }
+    } catch (error) {
+        hideLoading('skillGapResults');
+        showAlert(`LLM analysis failed: ${error.message}`, 'danger');
+    }
+}
+
 function displaySkillGapResults(missingSkills) {
     const container = document.getElementById('skillGapResults');
     
@@ -305,6 +452,297 @@ function displaySkillGapResults(missingSkills) {
             </div>
         </div>
     `;
+}
+
+function displayLLMSkillGapResults(llmAnalysis) {
+    const container = document.getElementById('skillGapResults');
+    
+    let html = `
+        <div class="result-card">
+            <h5><i class="fas fa-chart-line text-info me-2"></i>LLM Skill Gap Analysis</h5>
+    `;
+
+    // Missing skills section
+    if (llmAnalysis.missing_skills && llmAnalysis.missing_skills.length > 0) {
+        html += `
+            <div class="mb-4">
+                <h6><i class="fas fa-exclamation-triangle text-warning me-2"></i>Missing Skills</h6>
+                ${llmAnalysis.missing_skills.map(skill => `
+                    <div class="card mb-2">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <h6 class="card-title mb-1">${skill.skill}</h6>
+                                <span class="badge bg-${skill.importance === 'high' ? 'danger' : skill.importance === 'medium' ? 'warning' : 'info'}">${skill.importance}</span>
+                            </div>
+                            <p class="card-text text-muted small">${skill.description}</p>
+                            <div class="mt-2">
+                                <strong>Improvement suggestions:</strong>
+                                <ul class="mb-0">
+                                    ${skill.improvement_suggestions.map(suggestion => `<li>${suggestion}</li>`).join('')}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    } else {
+        html += `
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle me-2"></i>
+                <strong>Great news!</strong> Your resume appears to cover all the key skills mentioned in the job description.
+            </div>
+        `;
+    }
+
+    // Experience gaps section
+    if (llmAnalysis.experience_gaps && llmAnalysis.experience_gaps.length > 0) {
+        html += `
+            <div class="mb-4">
+                <h6><i class="fas fa-clock text-warning me-2"></i>Experience Gaps</h6>
+                ${llmAnalysis.experience_gaps.map(gap => `
+                    <div class="card mb-2">
+                        <div class="card-body">
+                            <h6 class="card-title">${gap.area}</h6>
+                            <p class="card-text text-muted">${gap.description}</p>
+                            <div class="mt-2">
+                                <strong>Suggestions:</strong>
+                                <ul class="mb-0">
+                                    ${gap.suggestions.map(suggestion => `<li>${suggestion}</li>`).join('')}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    // Priority improvements
+    if (llmAnalysis.priority_improvements && llmAnalysis.priority_improvements.length > 0) {
+        html += `
+            <div class="mb-4">
+                <h6><i class="fas fa-star text-warning me-2"></i>Priority Improvements</h6>
+                <div class="alert alert-warning">
+                    <ol class="mb-0">
+                        ${llmAnalysis.priority_improvements.map(improvement => `<li>${improvement}</li>`).join('')}
+                    </ol>
+                </div>
+            </div>
+        `;
+    }
+
+    // Overall assessment
+    if (llmAnalysis.overall_assessment) {
+        html += `
+            <div class="mb-4">
+                <h6><i class="fas fa-chart-bar text-info me-2"></i>Overall Assessment</h6>
+                <p class="text-muted">${llmAnalysis.overall_assessment}</p>
+            </div>
+        `;
+    }
+
+    html += `</div>`;
+    container.innerHTML = html;
+}
+
+// Resume Improvement Functions
+async function resumeImprove() {
+    const jobDescription = document.getElementById('jobDescTextarea').value.trim();
+    
+    if (!extractedResumeText) {
+        showAlert('Please upload a resume first.', 'danger');
+        return;
+    }
+
+    if (!jobDescription) {
+        showAlert('Please enter a job description.', 'danger');
+        return;
+    }
+
+    showLoading('resumeImproveResults');
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/resume_improve`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                resume_text: extractedResumeText,
+                job_description: jobDescription
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            displayResumeImproveResults(data.llm_analysis);
+            showAlert('Resume improvement analysis completed!');
+        } else {
+            throw new Error(data.error || 'Resume improvement failed');
+        }
+    } catch (error) {
+        hideLoading('resumeImproveResults');
+        showAlert(`Resume improvement failed: ${error.message}`, 'danger');
+    }
+}
+
+function displayResumeImproveResults(llmAnalysis) {
+    const container = document.getElementById('resumeImproveResults');
+    
+    let html = `
+        <div class="result-card">
+            <h5><i class="fas fa-edit text-success me-2"></i>Resume Improvement Suggestions</h5>
+    `;
+
+    // Overall assessment
+    if (llmAnalysis.overall_assessment) {
+        html += `
+            <div class="mb-4">
+                <h6><i class="fas fa-chart-bar text-info me-2"></i>Overall Assessment</h6>
+                <p class="text-muted">${llmAnalysis.overall_assessment}</p>
+            </div>
+        `;
+    }
+
+    // Section analysis
+    if (llmAnalysis.section_analysis && llmAnalysis.section_analysis.length > 0) {
+        html += `
+            <div class="mb-4">
+                <h6><i class="fas fa-list text-primary me-2"></i>Section Analysis</h6>
+                ${llmAnalysis.section_analysis.map(section => `
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="mb-0 text-capitalize">${section.section}</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <strong>Current Content:</strong>
+                                <p class="text-muted small">${section.current_content}</p>
+                            </div>
+                            
+                            ${section.issues && section.issues.length > 0 ? `
+                            <div class="mb-3">
+                                <strong>Issues:</strong>
+                                <ul class="text-danger small">
+                                    ${section.issues.map(issue => `<li>${issue}</li>`).join('')}
+                                </ul>
+                            </div>
+                            ` : ''}
+                            
+                            <div class="mb-3">
+                                <strong>Suggestions:</strong>
+                                <ul class="text-info small">
+                                    ${section.suggestions.map(suggestion => `<li>${suggestion}</li>`).join('')}
+                                </ul>
+                            </div>
+                            
+                            ${section.rewritten_content ? `
+                            <div class="mb-3">
+                                <strong>Improved Version:</strong>
+                                <div class="p-3 bg-light rounded">
+                                    <pre style="white-space: pre-wrap; font-size: 0.9rem;">${section.rewritten_content}</pre>
+                                </div>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    // Keyword optimization
+    if (llmAnalysis.keyword_optimization && llmAnalysis.keyword_optimization.length > 0) {
+        html += `
+            <div class="mb-4">
+                <h6><i class="fas fa-key text-warning me-2"></i>Keyword Optimization</h6>
+                ${llmAnalysis.keyword_optimization.map(keyword => `
+                    <div class="card mb-2">
+                        <div class="card-body">
+                            <h6 class="card-title">${keyword.keyword}</h6>
+                            <p class="card-text"><strong>Current usage:</strong> ${keyword.current_usage}</p>
+                            <p class="card-text"><strong>Suggested usage:</strong> ${keyword.suggested_usage}</p>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    // Action items
+    if (llmAnalysis.action_items && llmAnalysis.action_items.length > 0) {
+        html += `
+            <div class="mb-4">
+                <h6><i class="fas fa-tasks text-success me-2"></i>Action Items</h6>
+                <div class="alert alert-success">
+                    <ol class="mb-0">
+                        ${llmAnalysis.action_items.map(item => `<li>${item}</li>`).join('')}
+                    </ol>
+                </div>
+            </div>
+        `;
+    }
+
+    // Priority score
+    if (llmAnalysis.priority_score) {
+        html += `
+            <div class="mb-4">
+                <h6><i class="fas fa-star text-warning me-2"></i>Resume Quality Score</h6>
+                <div class="progress mb-2">
+                    <div class="progress-bar bg-${llmAnalysis.priority_score >= 80 ? 'success' : llmAnalysis.priority_score >= 60 ? 'warning' : 'danger'}" 
+                         style="width: ${llmAnalysis.priority_score}%">
+                        ${llmAnalysis.priority_score}/100
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    html += `</div>`;
+    container.innerHTML = html;
+}
+
+// LLM Status Functions
+async function checkLLMStatus() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/llm_status`);
+        const data = await response.json();
+        
+        const container = document.getElementById('llmStatusIndicator');
+        
+        if (data.success && data.llm_status.available) {
+            container.innerHTML = `
+                <div class="alert alert-success">
+                    <i class="fas fa-magic me-2"></i>
+                    <strong>LLM Services Available:</strong> ${data.llm_status.provider_info.preferred_provider} 
+                    (${data.llm_status.provider_info.available_providers.join(', ')})
+                </div>
+            `;
+        } else {
+            container.innerHTML = `
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>LLM Services Unavailable:</strong> ${data.llm_status?.error || 'No LLM providers configured'}
+                    <br><small>Basic features will work, but LLM-enhanced features require API key configuration.</small>
+                </div>
+            `;
+            
+            // Disable LLM buttons
+            document.getElementById('llmRecommendJobsBtn').disabled = true;
+            document.getElementById('llmAnalyzeSkillsBtn').disabled = true;
+            document.getElementById('resumeImproveBtn').disabled = true;
+        }
+    } catch (error) {
+        const container = document.getElementById('llmStatusIndicator');
+        container.innerHTML = `
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>LLM Status Unknown:</strong> Could not check LLM service availability
+            </div>
+        `;
+    }
 }
 
 // Sample Data Functions
@@ -349,8 +787,11 @@ Python, JavaScript, React, Node.js, SQL, AWS, Docker, Git, HTML, CSS, REST APIs,
 
     // Enable other features
     document.getElementById('recommendJobsBtn').disabled = false;
+    document.getElementById('llmRecommendJobsBtn').disabled = false;
     document.getElementById('jobDescTextarea').disabled = false;
     document.getElementById('analyzeSkillsBtn').disabled = false;
+    document.getElementById('llmAnalyzeSkillsBtn').disabled = false;
+    document.getElementById('resumeImproveBtn').disabled = false;
 
     showAlert('Sample resume loaded successfully! You can now try job recommendations and skill analysis.');
 }
@@ -386,9 +827,15 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Add event listeners
     document.getElementById('recommendJobsBtn').addEventListener('click', recommendJobs);
+    document.getElementById('llmRecommendJobsBtn').addEventListener('click', llmRecommendJobs);
     document.getElementById('analyzeSkillsBtn').addEventListener('click', analyzeSkillGap);
+    document.getElementById('llmAnalyzeSkillsBtn').addEventListener('click', llmAnalyzeSkillGap);
+    document.getElementById('resumeImproveBtn').addEventListener('click', resumeImprove);
     document.getElementById('loadSampleResumeBtn').addEventListener('click', loadSampleResume);
     document.getElementById('loadSampleJobBtn').addEventListener('click', loadSampleJobDesc);
+    
+    // Check LLM status
+    checkLLMStatus();
 });
 
 // Health check function

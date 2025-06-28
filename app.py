@@ -2,6 +2,10 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 from routes import api
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 def create_app():
     """Create and configure the Flask application."""
